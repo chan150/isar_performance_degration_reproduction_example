@@ -14,6 +14,11 @@ Future<void> main() async {
     directory: (await getTemporaryDirectory()).path,
     engine: kIsWeb ? IsarEngine.sqlite : IsarEngine.isar,
   );
+
+  isar.write((isar) => isar.simpleRecords.clear());
+  final newRecords = List.generate(100, (_) => SimpleRecord());
+  isar.write((isar) => isar.simpleRecords.putAll(newRecords));
+
   runApp(const MyApp());
 }
 
@@ -22,7 +27,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: MyHomePage());
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: MyHomePage(),
+    );
   }
 }
 
@@ -40,31 +48,37 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Row(
         children: [
           Expanded(
-            child: StreamBuilder(
-              stream: isar.simpleRecords.where().watch(fireImmediately: true),
-              builder: (context, snapshot) {
-                final list = snapshot.data ?? [];
-                return ListView.builder(
-                  itemCount: list.length,
-                  itemBuilder: (context, index) {
-                    return Text(list[index].toString());
-                  },
-                );
-              },
+            child: Column(
+              children: [
+                const Text('Original watch'),
+                for (var i = 0; i < 10; i++)
+                  Expanded(
+                    child: StreamBuilder(
+                      stream: isar.simpleRecords.where().watch(fireImmediately: true),
+                      builder: (context, snapshot) {
+                        final list = snapshot.data ?? [];
+                        return Text(list.length.toString());
+                      },
+                    ),
+                  ),
+              ],
             ),
           ),
           Expanded(
-            child: StreamBuilder(
-              stream: isar.simpleRecords.where().watchX(fireImmediately: true),
-              builder: (context, snapshot) {
-                final list = snapshot.data ?? [];
-                return ListView.builder(
-                  itemCount: list.length,
-                  itemBuilder: (context, index) {
-                    return Text(list[index].toString());
-                  },
-                );
-              },
+            child: Column(
+              children: [
+                const Text('Improved watch'),
+                for (var i = 0; i < 10; i++)
+                  Expanded(
+                    child: StreamBuilder(
+                      stream: isar.simpleRecords.where().watchX(fireImmediately: true),
+                      builder: (context, snapshot) {
+                        final list = snapshot.data ?? [];
+                        return Text(list.length.toString());
+                      },
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
@@ -74,16 +88,15 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           FloatingActionButton(
             onPressed: () {
-              final newRecord = SimpleRecord();
-              isar.write((isar) => isar.simpleRecords.put(newRecord));
+              final newRecords = List.generate(100, (_) => SimpleRecord());
+              isar.write((isar) => isar.simpleRecords.putAll(newRecords));
             },
             child: const Icon(Icons.exposure_plus_1),
           ),
           const SizedBox(height: 100),
           FloatingActionButton(
             onPressed: () {
-              final ids = isar.simpleRecords.where().findAll().map((e) => e.id);
-              isar.write((isar) => isar.simpleRecords.deleteAll([...ids]));
+              isar.write((isar) => isar.simpleRecords.clear());
             },
             child: const Icon(Icons.exposure_minus_1),
           ),
