@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:isar_performance_degration_reproduction_example/extension.dart';
@@ -12,7 +11,7 @@ Future<void> main() async {
   isar = Isar.open(
     schemas: [SimpleRecordSchema],
     directory: (await getTemporaryDirectory()).path,
-    engine: kIsWeb ? IsarEngine.sqlite : IsarEngine.isar,
+    engine: IsarEngine.isar,
   );
 
   isar.write((isar) => isar.simpleRecords.clear());
